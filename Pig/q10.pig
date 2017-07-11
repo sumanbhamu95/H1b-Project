@@ -1,0 +1,16 @@
+bag1= load '/user/hive/warehouse/hiveh1b.db/h1b_final' using PigStorage('\t') as (sno:int,casestatus:chararray,employername:chararray,socname:chararray,jobtitle:chararray,fulltime:chararray,wage:int,year:chararray,worksite:chararray,longt:double,lat:double);
+bag2= group bag1 by jobtitle;
+bag3= foreach bag2 generate group,COUNT(bag1);
+bag4= filter bag3 by $1>1000;
+bag5= filter bag1 by casestatus=='CERTIFIED';
+bag6= group bag5 by jobtitle;
+bag7= foreach bag6 generate group,COUNT(bag5);
+bag8= filter bag1 by casestatus=='CERTIFIED-WITHDRAWN';
+bag9= group bag8 by jobtitle;
+bag10= foreach bag9 generate group,COUNT(bag8);
+bag11= join bag4 by $0,bag7 by $0,bag10 by $0;
+bag12= foreach bag11 generate $0,$1,$3,$5;
+bag13= foreach bag12 generate $0,((($2+$3)*100)/$1) as per;
+bag14= filter bag13 by per>70;
+bag15= order bag14 by $1 desc;
+dump bag15;
